@@ -48,17 +48,35 @@ proc combinations {list size} {
 }
  
 
- proc comma_separate {lst} {
+ proc comma_separate {lst {lparen ""} {rparen ""}} {
     set res "";
 
     foreach item $lst {
         if {$res != ""} {
             append res ","
         }
-        append res $item
+        append res "${lparen}${item}${rparen}"
     }
     return $res;
  }
+
+
+ proc suffixes {lst {result {}}} {
+    set len [llength $lst];
+    for {set i 0} {$i < $len} {incr i} {
+        lappend  result [lrange $lst $i end];
+    }
+    return $result;
+ }
+
+proc prefixes {lst {result {}}} {
+    set len [llength $lst];
+    for {set i 0} {$i < $len} {incr i} {
+        lappend  result [lrange $lst 0 $i];
+    }
+    return $result;
+ }
+ 
 
 proc add_text {args} {
     global output_text;
@@ -93,11 +111,11 @@ proc expand_macro {name args}  {
     set cmd "macroexpand_**_$name "
     append cmd $args;
     set result [uplevel #0 $cmd];
-    add_text "\n//begin_macro_expansion : $name $args {{{1\n"
+    add_text "\n//begin_macro_expansion : $name $args {{{\n"
     add_text "#pragma region macro expansion\n"
     add_text $result;
     add_text "\n#pragma endregion $name $args"
-    add_text "\n//end_macro_expansion }}}1\n"
+    add_text "\n//end_macro_expansion }}}\n"
 }
 
 
@@ -110,6 +128,12 @@ while {![eof $fp]} {
   if [regexp  {^//begin_macro_expansion} $line] {
         set state "expansion"
      } elseif  [regexp  {^//end_macro_expansion} $line] {
+        set temp [gets $fp]; # discard a blank
+        set stripped [string trimright [string trimleft $temp]];
+
+        if {[string length $stripped] > 0} {
+            add_text $temp "\n";
+        }
         set state "start"
      } elseif {$state == "start" || $state == "code"} {
        add_text $line "\n";
@@ -141,6 +165,7 @@ close $fp;
 set yesno [tk_messageBox -title "Confirm source file modification" -message "This will expand the macros in the source file" -type yesno]
 if {$yesno == yes} {
  set fp [open $input_file w];
+
  puts -nonewline $fp $output_text;
  close $fp
  puts "*********Modified source file with macro expansion!********";
