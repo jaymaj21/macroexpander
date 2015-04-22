@@ -106,18 +106,30 @@ proc def_p_macro {name arglist body} {
     uplevel #0 $cmd
 }
 
+proc remove-newline {lst} {
+  return [regsub -all {[\r\n]} $lst { }]
+}
+
 proc expand_macro {name args}  {
     puts "expanding macro $name with arguments $args"
     set cmd "macroexpand_**_$name "
     append cmd $args;
     set result [uplevel #0 $cmd];
-    add_text "\n//begin_macro_expansion : $name $args {{{\n"
+    add_text "\n//begin_macro_expansion : $name [remove-newline $args] {{{\n"
     add_text "#pragma region macro expansion\n"
     add_text $result;
-    add_text "\n#pragma endregion $name $args"
+    add_text "\n#pragma endregion $name [remove-newline $args]"
     add_text "\n//end_macro_expansion }}}\n"
 }
 
+proc seq {from to} {
+    if {$from >= $to} {
+        for {set i $from} {$i <= $to} {incr i}    {lappend out $i}
+    } else {
+        for {set i $from} {$i >= $to} {incr i -1} {lappend out $i}
+    }
+    return $out
+}
 
 set state "start";
 set code "";

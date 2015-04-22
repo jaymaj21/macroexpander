@@ -24,8 +24,6 @@ def_p_macro macro3 {args} {
 }
 
 
-
-
 def_p_macro macro4 {args} {
     foreach c [combinations $args 3] {
         foreach p [permutations $c] {
@@ -48,7 +46,13 @@ def_p_macro macro6 {args} {
 
 expand_macro macro1 P Q R
 expand_macro macro2 A B C 
-expand_macro macro2 "first argument" "second argument" "1,2,3,4" {if (this) then (that)} "hello world"
+expand_macro macro2 "first argument"  "1,2,3,4" {if (test("arg")) {
+    foo();
+    } 
+    else {
+    bar();
+    }
+} 
 expand_macro macro3 A B C D
 expand_macro macro4 A B C D
 expand_macro macro5 double double double double 
@@ -78,20 +82,28 @@ END(A);
 #pragma endregion macro2 A B C
 //end_macro_expansion }}}
 
-//begin_macro_expansion : macro2 {first argument} {second argument} 1,2,3,4 {if (this) then (that)} {hello world} {{{
+//begin_macro_expansion : macro2 {first argument} 1,2,3,4 {if (test("arg")) {     foo();     }      else {     bar();     } } {{{
 #pragma region macro expansion
 
 BEGIN(first argument);
-BEGIN(second argument);
 BEGIN(1,2,3,4);
-BEGIN(if (this) then (that));
-BEGIN(hello world);
-END(hello world);
-END(if (this) then (that));
+BEGIN(if (test("arg")) {
+    foo();
+    } 
+    else {
+    bar();
+    }
+);
+END(if (test("arg")) {
+    foo();
+    } 
+    else {
+    bar();
+    }
+);
 END(1,2,3,4);
-END(second argument);
 END(first argument);
-#pragma endregion macro2 {first argument} {second argument} 1,2,3,4 {if (this) then (that)} {hello world}
+#pragma endregion macro2 {first argument} 1,2,3,4 {if (test("arg")) {     foo();     }      else {     bar();     } }
 //end_macro_expansion }}}
 
 //begin_macro_expansion : macro3 A B C D {{{
